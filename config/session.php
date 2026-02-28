@@ -1,55 +1,101 @@
 <?php
-// Start session if not already started
-if (session_status() === PHP_SESSION_NONE) {
-    // Secure session settings
-    ini_set('session.cookie_httponly', 1);
-    ini_set('session.use_only_cookies', 1);
-    ini_set('session.use_strict_mode', 1);
-    
-    session_start();
+/**
+ * Session management for Admin and Student
+ * Handles separate session namespaces for each role
+ */
 
-    // Regenerate session ID periodically to prevent hijacking
-    if (!isset($_SESSION['created'])) {
-        session_regenerate_id(true);
-        $_SESSION['created'] = time();
+// ----------------------------
+// Start admin session safely
+// ----------------------------
+function adminSessionStart() {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    // Admin namespace
+    if (!isset($_SESSION['admin'])) {
+        $_SESSION['admin'] = [];
     }
 }
 
-/**
- * Checks if a user is logged in as a specific role.
- * Redirects to the appropriate login page if unauthorized.
- *
- * @param string $requiredRole 'admin' or 'student'
- */
-function checkAccess($requiredRole) {
-    $currentFile = basename($_SERVER['PHP_SELF']);
-
-    // Prevent redirect loops: allow login.php and index.php
-    $allowedPages = ['login.php', 'index.php', 'register.php'];
-    if (in_array($currentFile, $allowedPages)) {
-        return;
+// ----------------------------
+// Start student session safely
+// ----------------------------
+function studentSessionStart() {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
     }
+    // Student namespace
+    if (!isset($_SESSION['student'])) {
+        $_SESSION['student'] = [];
+    }
+}
 
-    // If session role is not set or doesn't match required role
-    if (!isset($_SESSION['role']) || $_SESSION['role'] !== $requiredRole) {
-        // Clear session safely
-        $_SESSION = [];
-        if (ini_get("session.use_cookies")) {
-            $params = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000,
-                $params["path"], $params["domain"],
-                $params["secure"], $params["httponly"]
-            );
-        }
-        session_destroy();
-
-        // Redirect based on role
-        if ($requiredRole === 'admin') {
-            header("Location: login.php?error=unauthorized");
-        } else {
-            header("Location: ../student/login.php?error=unauthorized");
-        }
+// ----------------------------
+// Check Admin Access
+// ----------------------------
+function checkAdminAccess() {
+    adminSessionStart();
+    if (!isset($_SESSION['admin']['user_id'])) {
+        // Not logged in as admin
+        header("Location: ../admin/login.php?error=unauthorized");
         exit();
     }
 }
+
+// ----------------------------
+// Check Student Access
+// ----------------------------
+function checkStudentAccess() {
+    studentSessionStart();
+    if (!isset($_SESSION['student']['user_id'])) {
+        // Not logged in as student
+        header("Location: ../student/login.php?error=unauthorized");
+        exit();
+    }
+}
+
+// ----------------------------
+// Admin Login
+// ----------------------------
+function adminLogin($id, $name) {
+    adminSessionStart();
+    $_SESSION['admin']['user_id'] = $id;
+    $_SESSION['admin']['admin_name'] = $name;
+}
+
+// ----------------------------
+// Student Login
+// ----------------------------
+function studentLogin($id, $name) {
+    studentSessionStart();
+    $_SESSION['student']['user_id'] = $id;
+    $_SESSION['student']['student_name'] = $name;
+}
+
+// ----------------------------
+// Admin Logout
+// ----------------------------
+function adminLogout() {
+    adminSessionStart();
+    unset($_SESSION['admin']);
+    header("Location: ../admin/login.php");
+    exit();
+}
+
+// ----------------------------
+// Student Logout
+// ----------------------------
+function studentLogout() {
+    studentSessionStart();
+    unset($_SESSION['student']);
+    header("Location: ../student/login.php");
+    exit();
+}
+
+// ----------------------------
+// Secure session cookie settings
+// ----------------------------
+ini_set('session.cookie_httponly', 1);
+ini_set('session.use_only_cookies', 1);
+ini_set('session.use_strict_mode', 1);
 ?>
