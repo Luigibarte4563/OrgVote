@@ -12,7 +12,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // 2. Fix Paths: Using __DIR__ ensures localhost finds files regardless of nesting
-require_once __DIR__ . "/../config/session.php";
+require_once __DIR__ . "/../config/admin_session.php";
 require_once __DIR__ . "/../config/database.php";
 require_once __DIR__ . "/../system/check_voting_time.php";
 
