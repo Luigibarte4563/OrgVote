@@ -70,3 +70,10 @@ CREATE TABLE election_settings (
     status ENUM('upcoming','active','closed') DEFAULT 'upcoming',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE positions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    position_name VARCHAR(100) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
