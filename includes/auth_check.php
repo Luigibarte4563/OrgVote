@@ -1,0 +1,8 @@
+<?php
+require_once "../config/session.php";
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../student/login.php");
+    exit();
+}
+?>
